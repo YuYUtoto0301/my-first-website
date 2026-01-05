@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 INVESTIGATION | RESETTABLE EDITION</title>
+    <title>2026 INVESTIGATION | STRANGER THINGS BINGO</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root {
             --st-red: #e11d21;
             --st-red-glow: #ff0000;
+            --st-blue: #00d4ff;
         }
 
         body, html {
@@ -20,6 +21,8 @@
 
         /* 背景：裏側の世界の胞子 */
         #ashCanvas { position: fixed; inset: 0; z-index: 0; background: radial-gradient(circle at center, #1a0505 0%, #000 100%); }
+        
+        /* CRT/VHSノイズエフェクト */
         .crt-overlay {
             position: fixed; inset: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%),
@@ -36,12 +39,15 @@
             filter: drop-shadow(0 0 15px var(--st-red)); animation: flicker 5s infinite;
             margin-bottom: 40px;
         }
+
         @keyframes flicker {
             0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; filter: drop-shadow(0 0 20px var(--st-red)); }
             20%, 22%, 24%, 55% { opacity: 0.4; filter: none; }
         }
 
         .bingo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; perspective: 1000px; }
+        
+        /* カードデザイン */
         .card { aspect-ratio: 1; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
         .card.is-flipped { transform: rotateY(180deg); }
         
@@ -51,69 +57,86 @@
             border: 2px solid #333; border-radius: 4px; padding: 10px;
             box-sizing: border-box; text-transform: uppercase;
         }
-        .card-front { background: #111; color: #aaa; font-size: 0.85rem; background-image: radial-gradient(#222 1px, transparent 1px); background-size: 4px 4px; }
-        
-        /* 裏面：うっすら文字が見える */
+
+        .card-front {
+            background: #111; color: #aaa; font-size: 0.85rem;
+            background-image: radial-gradient(#222 1px, transparent 1px); background-size: 4px 4px;
+        }
+
         .card-back {
             transform: rotateY(180deg); background-color: #200;
             color: rgba(255, 100, 100, 0.4); border-color: #500;
             font-size: 0.85rem; text-shadow: 0 0 5px rgba(255,0,0,0.3);
+            text-decoration: line-through;
         }
 
         .card.line-active .card-back {
             animation: linePulse 1s ease-in-out infinite alternate;
             border-color: var(--st-red); color: rgba(255, 150, 150, 0.8);
         }
+
         @keyframes linePulse {
             from { box-shadow: 0 0 10px var(--st-red-glow), inset 0 0 10px var(--st-red-glow); }
             to { box-shadow: 0 0 25px var(--st-red-glow), inset 0 0 20px var(--st-red-glow); }
         }
 
-        /* --- エフェクト --- */
+        /* --- 爪痕とBINGOの演出 --- */
         .overlay { position: fixed; inset: 0; z-index: 500; display: none; justify-content: center; align-items: center; pointer-events: none; }
-        #clawOverlay.active { display: flex; background-color: rgba(0,0,0,0.7); }
+        #clawOverlay.active { display: flex; background-color: rgba(0,0,0,0.8); }
 
-        .claw-container { position: absolute; width: 120%; height: 120%; display: flex; justify-content: center; align-items: center; transform: rotate(-20deg); opacity: 0; }
-        #clawOverlay.active .claw-container { animation: slashAction 0.8s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; }
-        .claw-image { width: 100%; height: auto; filter: invert(16%) sepia(96%) saturate(7432%) hue-rotate(358deg) brightness(96%) contrast(116%) drop-shadow(0 0 10px var(--st-red)); }
-
-        .claw-bingo-text {
-            position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 12rem;
-            color: transparent; -webkit-text-stroke: 4px var(--st-red);
-            filter: drop-shadow(0 0 30px var(--st-red)); opacity: 0; transform: scale(0.8);
+        /* 画像を使わずCSS/SVGで爪痕を再現 */
+        .claw-marks {
+            position: absolute; width: 300px; height: 300px; opacity: 0;
         }
-        #clawOverlay.active .claw-bingo-text { animation: bingoAppearClaw 2.5s ease-out forwards; animation-delay: 0.3s; }
+        #clawOverlay.active .claw-marks { animation: slashAction 0.6s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; }
+
+        .claw-line {
+            position: absolute; background: var(--st-red);
+            width: 10px; height: 100%;
+            border-radius: 50%; filter: blur(2px) drop-shadow(0 0 10px var(--st-red));
+            transform: rotate(25deg);
+        }
+        .claw-line:nth-child(1) { left: 20%; top: -10%; height: 110%; }
+        .claw-line:nth-child(2) { left: 50%; top: 0%; height: 100%; }
+        .claw-line:nth-child(3) { left: 80%; top: 10%; height: 90%; }
 
         @keyframes slashAction {
-            0% { opacity: 0; transform: rotate(-20deg) scale(1.5) translate(-10%, -10%); }
-            100% { opacity: 1; transform: rotate(-20deg) scale(1) translate(0, 0); }
+            0% { opacity: 0; transform: scale(1.5) rotate(-20deg) translate(-20%, -20%); }
+            100% { opacity: 1; transform: scale(1) rotate(-20deg) translate(0, 0); }
         }
-        @keyframes bingoAppearClaw {
+
+        .bingo-text {
+            position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 10rem;
+            color: transparent; -webkit-text-stroke: 3px var(--st-red);
+            filter: drop-shadow(0 0 30px var(--st-red)); opacity: 0;
+        }
+        #clawOverlay.active .bingo-text { animation: bingoAppear 2s ease-out forwards; animation-delay: 0.3s; }
+
+        @keyframes bingoAppear {
             0% { opacity: 0; transform: scale(0.5); }
-            20% { opacity: 1; transform: scale(1.2); }
+            20% { opacity: 1; transform: scale(1.1); }
             100% { opacity: 1; transform: scale(1); }
         }
 
-        /* 画面揺れ */
+        /* 全画面揺れ */
         .shake { animation: shakeEffect 0.2s infinite; }
         @keyframes shakeEffect {
             0% { transform: translate(1px, 1px); } 50% { transform: translate(-3px, 0px); } 100% { transform: translate(1px, -1px); }
         }
 
-        /* --- リセットボタン (新規追加) --- */
+        /* リセットボタン */
         .reset-btn {
             margin-top: 50px; background: none; border: 1px solid #444; color: #444;
             padding: 8px 15px; cursor: pointer; font-family: 'Special Elite', cursive;
             font-size: 0.7rem; letter-spacing: 2px; transition: 0.3s;
         }
-        .reset-btn:hover { border-color: var(--st-red); color: var(--st-red); box-shadow: 0 0 10px var(--st-red); }
+        .reset-btn:hover { border-color: var(--st-red); color: var(--st-red); }
 
         /* 全達成演出 */
         #grandOverlay.active { display: flex; flex-direction: column; animation: grandFinale 0.5s infinite; }
         .congrats-text {
-            font-family: 'Bebas Neue', sans-serif; font-size: 7rem;
-            color: white; text-shadow: 0 0 20px var(--st-red);
-            text-align: center; line-height: 1;
+            font-family: 'Bebas Neue', sans-serif; font-size: 6rem;
+            color: white; text-shadow: 0 0 20px var(--st-red); text-align: center;
         }
         @keyframes grandFinale { 0% { background-color: rgba(10, 0, 0, 0.9); } 50% { background-color: rgba(0, 0, 20, 0.9); } 100% { background-color: rgba(10, 0, 0, 0.9); } }
     </style>
@@ -126,28 +149,24 @@
     <div class="container" id="mainContainer">
         <h1>2026<br>Investigation</h1>
         <div class="bingo-grid" id="grid"></div>
-        
         <button class="reset-btn" onclick="resetInvestigation()">RESET INVESTIGATION DATA</button>
-        
         <p style="margin-top: 30px; font-size: 0.65rem; color: #555; letter-spacing: 4px;">HAWKINS NATIONAL LABORATORY | TOP SECRET</p>
     </div>
 
     <div id="clawOverlay" class="overlay">
-        <div class="claw-container">
-            <img src="image_0.png" alt="" class="claw-image">
+        <div class="claw-marks">
+            <div class="claw-line"></div>
+            <div class="claw-line"></div>
+            <div class="claw-line"></div>
         </div>
-        <div class="claw-bingo-text">BINGO!</div>
+        <div class="bingo-text">BINGO!</div>
     </div>
 
     <div id="grandOverlay" class="overlay">
-        <div class="congrats-text">CONGRATULATIONS<br><span style="font-size: 3rem;">INVESTIGATION COMPLETE</span></div>
+        <div class="congrats-text">CONGRATULATIONS<br><span style="font-size: 2.5rem;">INVESTIGATION COMPLETE</span></div>
     </div>
 
 <script>
-/**
- * STRANGER THINGS BINGO - RESETTABLE EDITION
- */
-
 const items = ["CAMPING", "OVERSEAS", "COURT WATCH", "FISHING", "FIRST SUNRISE", "COMEDY LIVE", "MUSIC LIVE", "LONG DRIVE", "CAREER PLAN"];
 const winningLines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
@@ -158,8 +177,8 @@ const ashCtx = ashCanvas.getContext('2d');
 const clawOverlay = document.getElementById('clawOverlay');
 const grandOverlay = document.getElementById('grandOverlay');
 
-const saveKey = 'st_bingo_v7_data';
-const lineKey = 'st_bingo_v7_lines';
+const saveKey = 'st_bingo_final_data';
+const lineKey = 'st_bingo_final_lines';
 
 let state = JSON.parse(localStorage.getItem(saveKey)) || new Array(9).fill(false);
 let triggeredLines = JSON.parse(localStorage.getItem(lineKey)) || [];
@@ -174,8 +193,7 @@ function init() {
 function resize() { ashCanvas.width = window.innerWidth; ashCanvas.height = window.innerHeight; }
 
 function createBingo() {
-    grid.innerHTML = ""; // 初期化
-    cards = [];
+    grid.innerHTML = "";
     items.forEach((text, i) => {
         const card = document.createElement('div');
         card.className = 'card';
@@ -188,17 +206,13 @@ function createBingo() {
                 setTimeout(checkBingo, 600);
             }
         });
-        grid.appendChild(card);
-        cards.push(card);
+        grid.appendChild(card); cards.push(card);
     });
 }
 
-// リセット機能
 function resetInvestigation() {
-    if (confirm("すべての調査データを初期化しますか？ (この操作は取り消せません)")) {
-        localStorage.removeItem(saveKey);
-        localStorage.removeItem(lineKey);
-        location.reload(); // ページをリロードして初期状態に戻す
+    if (confirm("すべての調査データをリセットしますか？")) {
+        localStorage.removeItem(saveKey); localStorage.removeItem(lineKey); location.reload();
     }
 }
 
@@ -207,36 +221,27 @@ function checkBingo() {
     winningLines.forEach((lineIndices, idx) => {
         if (!triggeredLines.includes(idx) && lineIndices.every(i => state[i])) {
             newlyBingo = true;
-            triggerBingoLine(lineIndices);
+            lineIndices.forEach(i => cards[i].classList.add('line-active'));
             triggeredLines.push(idx);
             localStorage.setItem(lineKey, JSON.stringify(triggeredLines));
         }
     });
-    if (newlyBingo) triggerClawEffect();
+    if (newlyBingo) {
+        clawOverlay.classList.add('active'); mainContainer.classList.add('shake');
+        setTimeout(() => { clawOverlay.classList.remove('active'); mainContainer.classList.remove('shake'); }, 3000);
+    }
     setTimeout(checkGrandFinale, 1000);
-}
-
-function triggerClawEffect() {
-    clawOverlay.classList.add('active');
-    mainContainer.classList.add('shake');
-    setTimeout(() => {
-        clawOverlay.classList.remove('active');
-        mainContainer.classList.remove('shake');
-    }, 3000);
 }
 
 function checkGrandFinale(isInitial = false) {
     if (state.every(v => v === true)) {
-        grandOverlay.style.display = 'flex';
-        grandOverlay.classList.add('active');
+        grandOverlay.style.display = 'flex'; grandOverlay.classList.add('active');
         cards.forEach(c => c.classList.add('line-active'));
     }
 }
 
-function triggerBingoLine(indices) { indices.forEach(i => cards[i].classList.add('line-active')); }
 function restoreActiveLines() { triggeredLines.forEach(lineIdx => { winningLines[lineIdx].forEach(i => cards[i].classList.add('line-active')); }); }
 
-// 背景粒子
 let spores = [];
 for(let i=0; i<60; i++) spores.push({ x: Math.random() * window.innerWidth, y: Math.random() * window.innerHeight, s: Math.random() * 2 + 0.5, vx: Math.random() * 0.8 - 0.4, vy: Math.random() * 0.4 + 0.1 });
 function animate() { ashCtx.clearRect(0,0, ashCanvas.width, ashCanvas.height); ashCtx.fillStyle = "rgba(255,255,255,0.25)"; spores.forEach(p => { p.x += p.vx; p.y += p.vy; if(p.y > ashCanvas.height) p.y = -10; ashCtx.beginPath(); ashCtx.arc(p.x, p.y, p.s, 0, Math.PI*2); ashCtx.fill(); }); requestAnimationFrame(animate); }
