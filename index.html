@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 INVESTIGATION | COMPLETE SAGA</title>
+    <title>2026 INVESTIGATION | MOBILE FIX</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -29,6 +29,7 @@
             font-family: 'Bebas Neue', sans-serif; font-size: 3rem;
             color: var(--st-red); filter: drop-shadow(0 0 10px var(--st-red));
             animation: pulse 2s infinite;
+            text-align: center; padding: 20px; /* スマホ用調整 */
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
@@ -58,15 +59,16 @@
         .card-face {
             position: absolute; inset: 0; backface-visibility: hidden;
             display: flex; align-items: center; justify-content: center;
-            border: 2px solid #333; border-radius: 4px; padding: 10px;
+            border: 2px solid #333; border-radius: 4px; padding: 5px; /* パディング調整 */
             box-sizing: border-box; text-transform: uppercase;
         }
-        .card-front { background: #111; color: #aaa; font-size: 0.85rem; }
+        .card-front { background: #111; color: #aaa; font-size: 0.8rem; /* 文字サイズ微調整 */ }
         /* 裏面：うっすら文字が見える */
         .card-back {
             transform: rotateY(180deg); background-color: #200;
             color: rgba(255, 100, 100, 0.4); border-color: #500;
-            font-size: 0.85rem; text-decoration: line-through; text-shadow: 0 0 5px rgba(255,0,0,0.3);
+            font-size: 0.8rem; /* 文字サイズ微調整 */
+            text-decoration: line-through; text-shadow: 0 0 5px rgba(255,0,0,0.3);
         }
         .card.line-active .card-back { animation: linePulse 1s ease-in-out infinite alternate; border-color: var(--st-red); }
         @keyframes linePulse { from { box-shadow: 0 0 10px var(--st-red-glow); } to { box-shadow: 0 0 25px var(--st-red-glow); } }
@@ -85,27 +87,34 @@
         .claw-line:nth-child(1) { left: 20%; top: -10%; height: 110%; }
         .claw-line:nth-child(2) { left: 50%; top: 0%; height: 100%; }
         .claw-line:nth-child(3) { left: 80%; top: 10%; height: 90%; }
-
         @keyframes slashAction {
             0% { opacity: 0; transform: scale(1.5) rotate(-20deg) translate(-20%, -20%); }
             100% { opacity: 1; transform: scale(1) rotate(-20deg) translate(0, 0); }
         }
-
         .bingo-text {
-            position: absolute; font-family: 'Bebas Neue', sans-serif; font-size: 10rem;
+            position: absolute; font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(6rem, 20vw, 12rem); /* レスポンシブ対応 */
             color: transparent; -webkit-text-stroke: 3px var(--st-red);
-            filter: drop-shadow(0 0 30px var(--st-red)); opacity: 0;
+            filter: drop-shadow(0 0 30px var(--st-red)); opacity: 0; text-align: center;
         }
         #clawOverlay.active .bingo-text { animation: bingoAppear 2s ease-out forwards; animation-delay: 0.3s; }
         @keyframes bingoAppear { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
 
-        /* 全達成お祝い演出 (Congratulations) */
-        #grandOverlay.active { display: flex; flex-direction: column; animation: grandFinale 0.5s infinite; background-color: rgba(0,0,0,0.9); }
+        /* 全達成お祝い演出 (Congratulations) - スマホ修正版 */
+        #grandOverlay.active { display: flex; flex-direction: column; animation: grandFinale 0.5s infinite; background-color: rgba(0,0,0,0.9); padding: 20px; }
         .congrats-text {
-            font-family: 'Bebas Neue', sans-serif; font-size: 6rem;
+            font-family: 'Bebas Neue', sans-serif;
+            /* 修正箇所：画面幅に合わせて文字サイズを自動調整 (最小3rem, 推奨13vw, 最大8rem) */
+            font-size: clamp(3.5rem, 13vw, 8rem);
             color: white; text-shadow: 0 0 20px var(--st-red), 0 0 50px var(--st-red);
-            text-align: center; line-height: 1; animation: pulseCongrats 0.3s infinite;
+            text-align: center; line-height: 1.1; animation: pulseCongrats 0.3s infinite;
+            width: 100%; word-break: break-word; /* 長い単語の折り返し */
         }
+        /* サブテキストもレスポンシブに */
+        .congrats-sub {
+            display: block; font-size: 0.5em; margin-top: 15px;
+        }
+
         @keyframes grandFinale { 
             0% { background-color: rgba(20, 0, 0, 0.9); } 
             50% { background-color: rgba(0, 0, 20, 0.9); } 
@@ -118,13 +127,19 @@
         @keyframes shakeEffect { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-3px, 0px); } 100% { transform: translate(1px, -1px); } }
         .reset-btn { margin-top: 50px; background: none; border: 1px solid #444; color: #444; padding: 8px 15px; cursor: pointer; font-family: 'Special Elite', cursive; font-size: 0.7rem; }
         .reset-btn:hover { color: var(--st-red); border-color: var(--st-red); }
+
+        /* スマホ向け微調整 */
+        @media (max-width: 400px) {
+            h1 { font-size: 3rem; }
+            .card-front, .card-back { font-size: 0.7rem; }
+        }
     </style>
 </head>
 <body>
 
     <div id="startOverlay" onclick="startInvestigation()">
         <div class="start-text">START INVESTIGATION</div>
-        <p style="margin-top:20px; color:#555;">(CLICK TO ENABLE AUDIO)</p>
+        <p style="margin-top:20px; color:#555; text-align: center;">(TAP SCREEN TO ENABLE AUDIO)</p>
     </div>
 
     <canvas id="ashCanvas"></canvas>
@@ -143,12 +158,15 @@
     </div>
 
     <div id="grandOverlay" class="overlay">
-        <div class="congrats-text">CONGRATULATIONS<br><span style="font-size: 2.5rem;">INVESTIGATION COMPLETE</span></div>
+        <div class="congrats-text">
+            CONGRATULATIONS
+            <span class="congrats-sub">INVESTIGATION COMPLETE</span>
+        </div>
     </div>
 
 <script>
 /**
- * STRANGER THINGS BINGO - THE COMPLETE SAGA
+ * STRANGER THINGS BINGO - MOBILE FIX EDITION
  */
 
 const items = ["CAMPING", "OVERSEAS", "COURT WATCH", "FISHING", "FIRST SUNRISE", "COMEDY LIVE", "MUSIC LIVE", "LONG DRIVE", "CAREER PLAN"];
@@ -163,8 +181,8 @@ const grandOverlay = document.getElementById('grandOverlay');
 const startOverlay = document.getElementById('startOverlay');
 
 let audioCtx;
-const saveKey = 'st_bingo_saga_data';
-const lineKey = 'st_bingo_saga_lines';
+const saveKey = 'st_bingo_mobile_v1_data';
+const lineKey = 'st_bingo_mobile_v1_lines';
 
 let state = JSON.parse(localStorage.getItem(saveKey)) || new Array(9).fill(false);
 let triggeredLines = JSON.parse(localStorage.getItem(lineKey)) || [];
@@ -233,12 +251,11 @@ function checkBingo() {
     setTimeout(() => checkGrandFinale(false), 1000);
 }
 
-// Congratulations 演出
+// Congratulations 演出 (スマホ対応済み)
 function checkGrandFinale(isInitial = false) {
     if (state.every(v => v === true)) {
         grandOverlay.style.display = 'flex';
         grandOverlay.classList.add('active');
-        // 全達成時はすべてのカードを光らせる
         cards.forEach(c => c.classList.add('line-active'));
     }
 }
